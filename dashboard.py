@@ -13,6 +13,7 @@ run_dates = []
 build_numbers = []
 from_builds = []
 databases = []
+excluded_plugins_list = []
 build_statuses = []
 
 for job in job_data:
@@ -20,6 +21,7 @@ for job in job_data:
     build_number = job.get('build_number', 'N/A')
     from_build = job.get('parameters', {}).get('from_build', 'N/A')
     database = job.get('parameters', {}).get('database', 'N/A')
+    excluded_plugins = job.get('parameters', {}).get('exception_list', 'N/A')
     job_status = job.get('job_status', 'N/A')
 
     run_date = run_date.split('T')[0]
@@ -27,6 +29,7 @@ for job in job_data:
     build_numbers.append(build_number)
     from_builds.append(from_build)
     databases.append(database)
+    excluded_plugins_list.append(excluded_plugins)
     build_statuses.append(job_status)
 
 # Create a DataFrame
@@ -35,7 +38,8 @@ df = pd.DataFrame({
     'Build Number': build_numbers,
     'From Build': from_builds,
     'Database': databases,
-    'Status': build_statuses
+    'Excluded Plugins': excluded_plugins_list,
+    'Status': build_statuses,
 })
 
 # Initialize the Dash app
@@ -51,16 +55,24 @@ app.layout = html.Div(children=[
             {'name': 'Build Number', 'id': 'Build Number'},
             {'name': 'From Build', 'id': 'From Build'},
             {'name': 'Database', 'id': 'Database'},
+            {'name': 'Excluded Plugins', 'id': 'Excluded Plugins'},
             {'name': 'Status', 'id': 'Status'}
         ],
         data=df.to_dict('records'),
         sort_action='native',
         filter_action='native',
         style_table={'overflowX': 'auto'},
-        style_cell={'textAlign': 'left'},
+        style_cell={
+            'textAlign': 'left',
+            'border': '1px solid black'
+        },
         style_header={
             'backgroundColor': 'rgb(230, 230, 230)',
-            'fontWeight': 'bold'
+            'fontWeight': 'bold',
+            'border': '1px solid black'
+        },
+        style_data={
+            'border': '1px solid black'
         },
         style_data_conditional=[
             {
@@ -80,7 +92,7 @@ app.layout = html.Div(children=[
                 'color': 'white'
             }
         ]
-    )
+    ),
 ])
 
 # Run the app
