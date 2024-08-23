@@ -1,6 +1,7 @@
 import dash
 from dash import dcc, html
 from dash import dash_table
+from dash.dependencies import Input, Output, State
 import pandas as pd
 import json
 
@@ -15,6 +16,7 @@ from_builds = []
 databases = []
 excluded_plugins_list = []
 build_statuses = []
+comments = []
 
 for job in job_data:
     run_date = job.get('timestamp', 'N/A')
@@ -23,6 +25,7 @@ for job in job_data:
     database = job.get('parameters', {}).get('database', 'N/A')
     excluded_plugins = job.get('parameters', {}).get('exception_list', 'N/A')
     job_status = job.get('job_status', 'N/A')
+    comment = job.get('comment', '')
 
     run_date = run_date.split('T')[0]
     run_dates.append(run_date)
@@ -31,6 +34,7 @@ for job in job_data:
     databases.append(database)
     excluded_plugins_list.append(excluded_plugins)
     build_statuses.append(job_status)
+    comments.append(comment)
 
 # Create a DataFrame
 df = pd.DataFrame({
@@ -40,6 +44,7 @@ df = pd.DataFrame({
     'Database': databases,
     'Excluded Plugins': excluded_plugins_list,
     'Status': build_statuses,
+    'Comment': comments
 })
 
 # Initialize the Dash app
@@ -56,11 +61,13 @@ app.layout = html.Div(children=[
             {'name': 'From Build', 'id': 'From Build'},
             {'name': 'Database', 'id': 'Database'},
             {'name': 'Excluded Plugins', 'id': 'Excluded Plugins'},
-            {'name': 'Status', 'id': 'Status'}
+            {'name': 'Status', 'id': 'Status'},
+            {'name': 'Comment', 'id': 'Comment', 'editable': True}
         ],
         data=df.to_dict('records'),
         sort_action='native',
         filter_action='native',
+        editable=True,
         style_table={'overflowX': 'auto'},
         style_cell={
             'textAlign': 'left',
@@ -93,7 +100,29 @@ app.layout = html.Div(children=[
             }
         ]
     ),
+    html.Button('Save Comments', id='save-button', n_clicks=0),
+    html.Div(id='output-state')
 ])
+
+# Callback to save edited comments back to the JSON file
+@app.callback(
+    Output('output-state', 'children'),
+    Input('save-button', 'n_clicks'),
+    State('job-status-table', 'data')
+)
+def save_comments(n_clicks, data):
+    if n_clicks > 0:
+        with open('historical_data.json', 'r') as f:
+            job_data = json.load(f)
+
+        for i, row in enumerate(data):
+            job_data[i]['comment'] = row['Comment']
+
+        with open('historical_data.json', 'w') as f:
+            json.dump(job_data, f, indent=4)
+
+        return 'Comments Saved'
+    return ''
 
 # Run the app
 if __name__ == '__main__':
