@@ -4,10 +4,10 @@ import os
 from datetime import datetime
 
 # Jenkins server details
-jenkins_url =
-job_name =
-username =
-api_token = 
+jenkins_url = 'https://jenkins-ng.xebialabs.com/jenkinsng/'
+job_name = 'QualityEngineering/job/XLR_Fresh_Install/job/master'
+username = 'mpolawar'
+api_token = 'Omsai@1234' 
 
 # API endpoint to get job details
 api_url = f'{jenkins_url}/job/{job_name}/api/json?tree=allBuilds[number,result,timestamp,actions[parameters[*]]]'
