@@ -9,6 +9,13 @@ import json
 with open('historical_data.json', 'r') as f:
     job_data = json.load(f)
 
+# Load comments from a separate JSON file
+try:
+    with open('comments.json', 'r') as f:
+        comments_data = json.load(f)
+except FileNotFoundError:
+    comments_data = {}
+
 # Extract relevant data for the dashboard
 run_dates = []
 build_numbers = []
@@ -25,7 +32,7 @@ for job in job_data:
     database = job.get('parameters', {}).get('database', 'N/A')
     excluded_plugins = job.get('parameters', {}).get('exception_list', 'N/A')
     job_status = job.get('job_status', 'N/A')
-    comment = job.get('comment', '')
+    comment = comments_data.get(str(build_number), '')
 
     run_date = run_date.split('T')[0]
     run_dates.append(run_date)
@@ -104,7 +111,7 @@ app.layout = html.Div(children=[
     html.Div(id='output-state')
 ])
 
-# Callback to save edited comments back to the JSON file
+# Callback to save edited comments back to the separate JSON file
 @app.callback(
     Output('output-state', 'children'),
     Input('save-button', 'n_clicks'),
@@ -112,14 +119,10 @@ app.layout = html.Div(children=[
 )
 def save_comments(n_clicks, data):
     if n_clicks > 0:
-        with open('historical_data.json', 'r') as f:
-            job_data = json.load(f)
+        comments_data = {str(row['Build Number']): row['Comment'] for row in data}
 
-        for i, row in enumerate(data):
-            job_data[i]['comment'] = row['Comment']
-
-        with open('historical_data.json', 'w') as f:
-            json.dump(job_data, f, indent=4)
+        with open('comments.json', 'w') as f:
+            json.dump(comments_data, f, indent=4)
 
         return 'Comments Saved'
     return ''
