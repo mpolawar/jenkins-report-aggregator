@@ -17,6 +17,7 @@ class GetJenkinsData:
         self.table_name = None
         self.tables = []
         self.db_path = './data/jenkins_data.db'
+        self.job_details_json = "./src/job_details.json"
         self.db_connection = sqlite3.connect(self.db_path)
         self.db_cursor = self.db_connection.cursor()
 
@@ -41,8 +42,8 @@ class GetJenkinsData:
 
     def readJobDetails(self):
         # Read job details from job_details.json
-        if os.path.exists('job_details.json'):
-            with open('job_details.json', 'r') as f:
+        if os.path.exists(self.job_details_json):
+            with open(self.job_details_json, 'r') as f:
                 self.job_details_data = json.load(f)
                 print(self.job_details_data)
         else:

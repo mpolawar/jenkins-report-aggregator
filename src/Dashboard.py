@@ -34,10 +34,10 @@ class Dashboard:
             parameters = json.loads(parameters)
             from_build = parameters.get('from_build', 'N/A')
             if 'to_build' in parameters:
-                to_build = parameters['to_build']
+                #to_build = parameters['to_build']
+                to_build = parameters.get('to_build')
             database = parameters.get('database', 'N/A')
             excluded_plugins = parameters.get('exception_list', 'N/A')
-
 
             run_date = run_date.split('T')[0]
             run_dates.append(run_date)
@@ -95,73 +95,90 @@ class Dashboard:
                 {'name': 'Comment', 'id': 'Comment', 'editable': True}
             ]
 
-        # Initialize the Dash app
-        app = dash.Dash(__name__)
+        # Initialize the Dash app with suppress_callback_exceptions=True
+        app = dash.Dash(__name__, suppress_callback_exceptions=True)
 
         # Define the layout of the dashboard
         app.layout = html.Div(children=[
-            html.H1(children=self.db_table),
-            dash_table.DataTable(
-                id='job-status-table',
-                columns=columns,
-                data=df.to_dict('records'),
-                sort_action='native',
-                filter_action='native',
-                editable=True,
-                style_table={'overflowX': 'auto'},
-                style_cell={
-                    'textAlign': 'left',
-                    'border': '1px solid black'
-                },
-                style_header={
-                    'backgroundColor': 'rgb(230, 230, 230)',
-                    'fontWeight': 'bold',
-                    'border': '1px solid black'
-                },
-                style_data={
-                    'border': '1px solid black'
-                },
-                style_data_conditional=[
-                    {
-                        'if': {
-                            'filter_query': '{Status} = "SUCCESS"',
-                            'column_id': 'Status'
-                        },
-                        'backgroundColor': 'lightgreen',
-                        'color': 'white'
-                    },
-                    {
-                        'if': {
-                            'filter_query': '{Status} = "FAILURE"',
-                            'column_id': 'Status'
-                        },
-                        'backgroundColor': 'lightcoral',
-                        'color': 'white'
-                    }
-                ]
-            ),
-            html.Button('Save Comments', id='save-button', n_clicks=0),
-            html.Div(id='output-state')
+            html.Div(children=[
+                dcc.Tabs(id='tabs', value='home', children=[
+                    dcc.Tab(label='Home', value='home'),
+                    dcc.Tab(label='XLR_Fresh_Install', value='xlr_fresh_install')
+                ], vertical=True, style={'height': '100vh', 'borderRight': '1px solid #d6d6d6'}),
+            ], style={'display': 'inline-block', 'width': '20%', 'verticalAlign': 'top'}),
+            html.Div(id='tabs-content', style={'display': 'inline-block', 'width': '80%'})
         ])
 
-        # Callback to save edited comments back to the separate JSON file
+        @app.callback(
+            Output('tabs-content', 'children'),
+            Input('tabs', 'value')
+        )
+        def render_content(tab):
+            if tab == 'xlr_fresh_install':
+                return html.Div([
+                    html.H1(children=self.db_table),
+                    dash_table.DataTable(
+                        id='job-status-table',
+                        columns=columns,
+                        data=df.to_dict('records'),
+                        sort_action='native',
+                        filter_action='native',
+                        editable=True,
+                        style_table={'overflowX': 'auto'},
+                        style_cell={
+                            'textAlign': 'left',
+                            'border': '1px solid black'
+                        },
+                        style_header={
+                            'backgroundColor': 'rgb(230, 230, 230)',
+                            'fontWeight': 'bold',
+                            'border': '1px solid black'
+                        },
+                        style_data={
+                            'border': '1px solid black'
+                        },
+                        style_data_conditional=[
+                            {
+                                'if': {
+                                    'filter_query': '{Status} = "SUCCESS"',
+                                    'column_id': 'Status'
+                                },
+                                'backgroundColor': 'lightgreen',
+                                'color': 'white'
+                            },
+                            {
+                                'if': {
+                                    'filter_query': '{Status} = "FAILURE"',
+                                    'column_id': 'Status'
+                                },
+                                'backgroundColor': 'lightcoral',
+                                'color': 'white'
+                            }
+                        ]
+                    ),
+                    html.Button('Save Comments', id='save-button', n_clicks=0),
+                    html.Div(id='output-state')
+                ])
+            else:
+                return html.Div([
+                    html.H1('Welcome to the Dashboard')
+                ])
+
         @app.callback(
             Output('output-state', 'children'),
             Input('save-button', 'n_clicks'),
             State('job-status-table', 'data')
         )
-
         def save_comments(n_clicks, data):
             if n_clicks > 0:
-                # Create a new connection for this thread
                 conn = sqlite3.connect(self.db_path)
                 cursor = conn.cursor()
                 for row in data:
                     build_number = row['Build Number']
                     comment = row['Comment']
                     cursor.execute(f'''
-                            UPDATE {self.db_table} SET comment = ? WHERE build_number = ?
-                        ''', (comment, build_number))
+                        UPDATE {self.db_table} SET comment = ? WHERE build_number = ?
+                    ''', (comment, build_number))
                     conn.commit()
                 conn.close()
                 return 'Comments Saved'

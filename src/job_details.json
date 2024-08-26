@@ -10,6 +10,11 @@
       "jenkins_url" : "https://jenkins-ng.xebialabs.com/jenkinsng/",
       "job_name" :    "QualityEngineering/job/XLR_Fresh_Install/job/master",
       "title":       "XLR_Fresh_Install"
+    },
+    {
+      "jenkins_url" : "https://jenkins-ng.xebialabs.com/jenkinsng/",
+      "job_name" :    "QualityEngineering/job/XLR_Upgrade/job/master/",
+      "title":       "XLR_Upgrade"
     }
   ]
 }

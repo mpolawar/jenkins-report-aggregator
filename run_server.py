@@ -11,5 +11,6 @@ jenkins_data.updateDatabase()
 #jenkins_data.display_historical_results()
 
 # Update the dashboard with the latest data
+print(jenkins_data.tables)
 dashboard = Dashboard(jenkins_data.tables)
 dashboard.updateDashboard()
