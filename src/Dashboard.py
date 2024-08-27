@@ -11,7 +11,7 @@ class Dashboard:
         self.db_path = './data/jenkins_data.db'
         self.conn = sqlite3.connect(self.db_path)
         self.cursor = self.conn.cursor()
-        self.db_table = db_tables[0]
+        self.db_table = db_tables[1]
 
     def updateDashboard(self):
         # Extract relevant data for the dashboard
