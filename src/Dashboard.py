@@ -9,101 +9,18 @@ import sqlite3
 class Dashboard:
     def __init__(self, db_tables):
         self.db_path = './data/jenkins_data.db'
-        self.conn = sqlite3.connect(self.db_path)
-        self.cursor = self.conn.cursor()
-        self.db_table = db_tables[1]
+        self.db_tables = db_tables
 
     def updateDashboard(self):
-        # Extract relevant data for the dashboard
-        run_dates = []
-        build_numbers = []
-        from_builds = []
-        to_builds = []
-        databases = []
-        excluded_plugins_list = []
-        build_statuses = []
-        comments = []
-
-        # Fetch job data from the database
-        cmd = 'SELECT timestamp, build_number, job_status, parameters, comment FROM ' + self.db_table
-        self.cursor.execute(cmd)
-        rows = self.cursor.fetchall()
-
-        for row in rows:
-            run_date, build_number, job_status, parameters, comment = row
-            parameters = json.loads(parameters)
-            from_build = parameters.get('from_build', 'N/A')
-            if 'to_build' in parameters:
-                #to_build = parameters['to_build']
-                to_build = parameters.get('to_build')
-            database = parameters.get('database', 'N/A')
-            excluded_plugins = parameters.get('exception_list', 'N/A')
-
-            run_date = run_date.split('T')[0]
-            run_dates.append(run_date)
-            build_numbers.append(build_number)
-            from_builds.append(from_build)
-            if 'to_build' in parameters:
-                to_builds.append(to_build)
-            databases.append(database)
-            excluded_plugins_list.append(excluded_plugins)
-            build_statuses.append(job_status)
-            comments.append(comment)
-
-        #if len(to_builds) > 0:
-        if to_builds:
-            # Create a DataFrame
-            df = pd.DataFrame({
-                'Date': run_dates,
-                'Build Number': build_numbers,
-                'From Build': from_builds,
-                'To Build': to_builds,
-                'Database': databases,
-                'Excluded Plugins': excluded_plugins_list,
-                'Status': build_statuses,
-                'Comment': comments
-            })
-
-            columns = [
-                {'name': 'Date', 'id': 'Date'},
-                {'name': 'Build Number', 'id': 'Build Number'},
-                {'name': 'From Build', 'id': 'From Build'},
-                {'name': 'To Build', 'id': 'To Build'},
-                {'name': 'Database', 'id': 'Database'},
-                {'name': 'Excluded Plugins', 'id': 'Excluded Plugins'},
-                {'name': 'Status', 'id': 'Status'},
-                {'name': 'Comment', 'id': 'Comment', 'editable': True}
-            ]
-        else:
-            df = pd.DataFrame({
-                'Date': run_dates,
-                'Build Number': build_numbers,
-                'From Build': from_builds,
-                'Database': databases,
-                'Excluded Plugins': excluded_plugins_list,
-                'Status': build_statuses,
-                'Comment': comments
-            })
-
-            columns = [
-                {'name': 'Date', 'id': 'Date'},
-                {'name': 'Build Number', 'id': 'Build Number'},
-                {'name': 'From Build', 'id': 'From Build'},
-                {'name': 'Database', 'id': 'Database'},
-                {'name': 'Excluded Plugins', 'id': 'Excluded Plugins'},
-                {'name': 'Status', 'id': 'Status'},
-                {'name': 'Comment', 'id': 'Comment', 'editable': True}
-            ]
-
-        # Initialize the Dash app with suppress_callback_exceptions=True
         app = dash.Dash(__name__, suppress_callback_exceptions=True)
 
-        # Define the layout of the dashboard
+        job_tabs = [dcc.Tab(label=job, value=job) for job in self.db_tables]
+
         app.layout = html.Div(children=[
             html.Div(children=[
                 dcc.Tabs(id='tabs', value='home', children=[
                     dcc.Tab(label='Home', value='home'),
-                    dcc.Tab(label='XLR_Fresh_Install', value='xlr_fresh_install')
+                    *job_tabs
                 ], vertical=True, style={'height': '100vh', 'borderRight': '1px solid #d6d6d6'}),
             ], style={'display': 'inline-block', 'width': '20%', 'verticalAlign': 'top'}),
             html.Div(id='tabs-content', style={'display': 'inline-block', 'width': '80%'})
@@ -114,9 +31,97 @@ class Dashboard:
             Input('tabs', 'value')
         )
         def render_content(tab):
-            if tab == 'xlr_fresh_install':
+            if tab == 'home':
                 return html.Div([
-                    html.H1(children=self.db_table),
+                    html.H1('Welcome to the Dashboard')
+                ])
+            else:
+                #print(f'Loading {tab} data')
+                conn = sqlite3.connect(self.db_path)
+                cursor = conn.cursor()
+                cmd = 'SELECT timestamp, build_number, job_status, parameters, comment FROM ' + tab
+                cursor.execute(cmd)
+                rows = cursor.fetchall()
+                conn.close()
+
+                run_dates = []
+                build_numbers = []
+                from_builds = []
+                to_builds = []
+                databases = []
+                excluded_plugins_list = []
+                build_statuses = []
+                comments = []
+
+
+                for row in rows:
+                    run_date, build_number, job_status, parameters, comment = row
+                    parameters = json.loads(parameters)
+                    from_build = parameters.get('from_build', 'N/A')
+                    if 'to_build' in parameters:
+                        #to_build = parameters['to_build']
+                        to_build = parameters.get('to_build')
+                    database = parameters.get('database', 'N/A')
+                    excluded_plugins = parameters.get('exception_list', 'N/A')
+
+                    run_date = run_date.split('T')[0]
+                    run_dates.append(run_date)
+                    build_numbers.append(build_number)
+                    from_builds.append(from_build)
+                    if 'to_build' in parameters:
+                        to_builds.append(to_build)
+                    databases.append(database)
+                    excluded_plugins_list.append(excluded_plugins)
+                    build_statuses.append(job_status)
+                    comments.append(comment)
+
+                #if len(to_builds) > 0:
+                if to_builds:
+                    # Create a DataFrame
+                    df = pd.DataFrame({
+                        'Date': run_dates,
+                        'Build Number': build_numbers,
+                        'From Build': from_builds,
+                        'To Build': to_builds,
+                        'Database': databases,
+                        'Excluded Plugins': excluded_plugins_list,
+                        'Status': build_statuses,
+                        'Comment': comments
+                    })
+
+                    columns = [
+                        {'name': 'Date', 'id': 'Date'},
+                        {'name': 'Build Number', 'id': 'Build Number'},
+                        {'name': 'From Build', 'id': 'From Build'},
+                        {'name': 'To Build', 'id': 'To Build'},
+                        {'name': 'Database', 'id': 'Database'},
+                        {'name': 'Excluded Plugins', 'id': 'Excluded Plugins'},
+                        {'name': 'Status', 'id': 'Status'},
+                        {'name': 'Comment', 'id': 'Comment', 'editable': True}
+                    ]
+                else:
+                    df = pd.DataFrame({
+                        'Date': run_dates,
+                        'Build Number': build_numbers,
+                        'From Build': from_builds,
+                        'Database': databases,
+                        'Excluded Plugins': excluded_plugins_list,
+                        'Status': build_statuses,
+                        'Comment': comments
+                    })
+                    columns = [
+                        {'name': 'Date', 'id': 'Date'},
+                        {'name': 'Build Number', 'id': 'Build Number'},
+                        {'name': 'From Build', 'id': 'From Build'},
+                        {'name': 'Database', 'id': 'Database'},
+                        {'name': 'Excluded Plugins', 'id': 'Excluded Plugins'},
+                        {'name': 'Status', 'id': 'Status'},
+                        {'name': 'Comment', 'id': 'Comment', 'editable': True}
+                    ]
+
+
+                return html.Div([
+                    html.H1(children=tab),
                     dash_table.DataTable(
                         id='job-status-table',
                         columns=columns,
@@ -159,17 +164,14 @@ class Dashboard:
                     html.Button('Save Comments', id='save-button', n_clicks=0),
                     html.Div(id='output-state')
                 ])
-            else:
-                return html.Div([
-                    html.H1('Welcome to the Dashboard')
-                ])
 
         @app.callback(
             Output('output-state', 'children'),
             Input('save-button', 'n_clicks'),
-            State('job-status-table', 'data')
+            State('job-status-table', 'data'),
+            State('tabs', 'value')
         )
-        def save_comments(n_clicks, data):
+        def save_comments(n_clicks, data, tab):
             if n_clicks > 0:
                 conn = sqlite3.connect(self.db_path)
                 cursor = conn.cursor()
@@ -177,12 +179,11 @@ class Dashboard:
                     build_number = row['Build Number']
                     comment = row['Comment']
                     cursor.execute(f'''
-                        UPDATE {self.db_table} SET comment = ? WHERE build_number = ?
+                        UPDATE {tab} SET comment = ? WHERE build_number = ?
                     ''', (comment, build_number))
                     conn.commit()
                 conn.close()
                 return 'Comments Saved'
             return ''
 
-        # Run the Dash app
         app.run_server(debug=True)
