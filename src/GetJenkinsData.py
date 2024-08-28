@@ -16,7 +16,6 @@ class GetJenkinsData:
         self.api_url = None
         self.table_name = None
         self.jobs = []
-        self.tables = []
         self.db_path = './data/jenkins_data.db'
         self.job_details_json = "./src/job_details.json"
         self.db_connection = sqlite3.connect(self.db_path)
@@ -59,18 +58,14 @@ class GetJenkinsData:
 
         # Read all jobs details from job_details.json
         self.jobs = self.job_details_data.get('jobs', [])
-        for job in self.jobs:
-            print(f'Job details are: {job}')
-            self.title = job.get('title', 'N/A')
-            self.tables.append(self.title)
 
     def updateDatabase(self):
         for job in self.jobs:
-            print(f'\nUpdating database for {job["title"]}')
+            print(f'\nUpdating database for {job["db_table"]}')
 
             # Update table with all OR latest entries
-            if self.table_exists(job["title"]):
-                print(f'Table {job["title"]} already exists')
+            if self.table_exists(job["db_table"]):
+                print(f'Table {job["db_table"]} already exists')
 
                 # API endpoint to get the latest job details
                 self.api_url = f'{job["jenkins_url"]}/job/{job["job_name"]}/lastBuild/api/json?tree=number,result,timestamp,actions[parameters[*]]'
@@ -80,7 +75,7 @@ class GetJenkinsData:
                     print("LATEST BUILD FROM JENKINS IS: " + str(latest_build['number']))
                     # Check if the build_number already exists in the database
                     self.db_cursor.execute(f'''
-                        SELECT 1 FROM {job["title"]} WHERE build_number = ?
+                        SELECT 1 FROM {job["db_table"]} WHERE build_number = ?
                     ''', (latest_build['number'],))
                     if self.db_cursor.fetchone() is None:
                         # Insert the latest build data into the database
@@ -96,18 +91,18 @@ class GetJenkinsData:
                             'parameters': json.dumps(parameters)
                         }
                         self.db_cursor.execute(f'''
-                            INSERT INTO {job["title"]} (timestamp, build_number, job_status, parameters)
+                            INSERT INTO {job["db_table"]} (timestamp, build_number, job_status, parameters)
                             VALUES (?, ?, ?, ?)
                         ''', (build_data['timestamp'], build_data['build_number'], build_data['job_status'], build_data['parameters']))
                         self.db_connection.commit()
-                        print(f'Build number {latest_build["number"]} added to the database table {job["title"]}')
+                        print(f'Build number {latest_build["number"]} added to the database table {job["db_table"]}')
                     else:
                         print(f'Build number {latest_build["number"]} already exists in the database')
 
             # Code to update all build details
             else:
-                print(f'Table {job["title"]} does not exist')
-                self.create_table(job["title"])
+                print(f'Table {job["db_table"]} does not exist')
+                self.create_table(job["db_table"])
 
                 # API endpoint to get job details
                 self.api_url = f'{job["jenkins_url"]}/job/{job["job_name"]}/api/json?tree=allBuilds[number,result,timestamp,actions[parameters[*]]]'
@@ -132,7 +127,7 @@ class GetJenkinsData:
                             'parameters': json.dumps(parameters)
                         }
                         self.db_cursor.execute(f'''
-                            INSERT INTO {job["title"]} (timestamp, build_number, job_status, parameters)
+                            INSERT INTO {job["db_table"]} (timestamp, build_number, job_status, parameters)
                             VALUES (?, ?, ?, ?)
                         ''', (build_data['timestamp'], build_data['build_number'], build_data['job_status'], build_data['parameters']))
                         self.db_connection.commit()

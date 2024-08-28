@@ -1,20 +1,29 @@
 {
 "creds":
     {
-      "username" :    "mpolawar",
-      "api_token" :    "Omsai@1234"
+      "username" :    "",
+      "api_token" :    ""
     },
 
   "jobs": [
     {
       "jenkins_url" : "https://jenkins-ng.xebialabs.com/jenkinsng/",
       "job_name" :    "QualityEngineering/job/XLR_Fresh_Install/job/master",
-      "title":       "XLR_Fresh_Install"
+      "db_table":    "XLR_Fresh_Install",
+      "title":       "Release Fresh Install"
     },
     {
       "jenkins_url" : "https://jenkins-ng.xebialabs.com/jenkinsng/",
       "job_name" :    "QualityEngineering/job/XLR_Upgrade/job/master/",
-      "title":       "XLR_Upgrade"
+      "db_table":    "XLR_Upgrade",
+      "title":       "Release Upgrade"
+    },
+
+    {
+      "jenkins_url" : "https://jenkins-ng.xebialabs.com/jenkinsng/",
+      "job_name" :    "QualityEngineering/job/XLD_Fresh_Install/job/master/",
+      "db_table":    "XLD_Fresh_Install",
+      "title":       "Deploy Fresh Install"
     }
   ]
 }
