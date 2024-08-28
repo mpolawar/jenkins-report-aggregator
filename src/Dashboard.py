@@ -7,14 +7,16 @@ import json
 import sqlite3
 
 class Dashboard:
-    def __init__(self, db_tables):
+    def __init__(self, jobs):
         self.db_path = './data/jenkins_data.db'
-        self.db_tables = db_tables
+        self.jobs = jobs
+        for job in self.jobs:
+            job[job['title']] = job['db_table']
 
     def updateDashboard(self):
         app = dash.Dash(__name__, suppress_callback_exceptions=True)
 
-        job_tabs = [dcc.Tab(label=job, value=job) for job in self.db_tables]
+        job_tabs = [dcc.Tab(label=job['title'], value=job['title']) for job in self.jobs]
 
         app.layout = html.Div(children=[
             html.Div(children=[
@@ -36,6 +38,10 @@ class Dashboard:
                     html.H1('Welcome to the Dashboard', style={'font-family': 'Arial', 'textAlign': 'left'})
                 ])
             else:
+                for job in self.jobs:
+                    if job['title'] == tab:
+                        tab = job['db_table']
+                        break
                 #print(f'Loading {tab} data')
                 conn = sqlite3.connect(self.db_path)
                 cursor = conn.cursor()
@@ -121,7 +127,7 @@ class Dashboard:
 
 
                 return html.Div([
-                    html.H1(children=tab,  style={'font-family': 'Arial', 'textAlign': 'left'}),
+                    html.H1(children=job['title'],  style={'font-family': 'Arial', 'textAlign': 'left'}),
                     dash_table.DataTable(
                         id='job-status-table',
                         columns=columns,
@@ -172,6 +178,10 @@ class Dashboard:
             State('tabs', 'value')
         )
         def save_comments(n_clicks, data, tab):
+            for job in self.jobs:
+                if job['title'] == tab:
+                    tab = job['db_table']
+                    break
             if n_clicks > 0:
                 conn = sqlite3.connect(self.db_path)
                 cursor = conn.cursor()
