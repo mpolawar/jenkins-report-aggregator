@@ -19,10 +19,10 @@ class Dashboard:
         app.layout = html.Div(children=[
             html.Div(children=[
                 dcc.Tabs(id='tabs', value='home', children=[
-                    dcc.Tab(label='Home', value='home'),
+                    dcc.Tab(label='Home', value='home',  style={'font-family': 'Arial'}),
                     *job_tabs
                 ], vertical=True, style={'height': '100vh', 'borderRight': '1px solid #d6d6d6'}),
-            ], style={'display': 'inline-block', 'width': '20%', 'verticalAlign': 'top'}),
+            ], style={'display': 'inline-block', 'width': '20%', 'verticalAlign': 'top', 'font-family': 'Arial' }),
             html.Div(id='tabs-content', style={'display': 'inline-block', 'width': '80%'})
         ])
 
@@ -33,7 +33,7 @@ class Dashboard:
         def render_content(tab):
             if tab == 'home':
                 return html.Div([
-                    html.H1('Welcome to the Dashboard')
+                    html.H1('Welcome to the Dashboard', style={'font-family': 'Arial', 'textAlign': 'left'})
                 ])
             else:
                 #print(f'Loading {tab} data')
@@ -121,7 +121,7 @@ class Dashboard:
 
 
                 return html.Div([
-                    html.H1(children=tab),
+                    html.H1(children=tab,  style={'font-family': 'Arial', 'textAlign': 'left'}),
                     dash_table.DataTable(
                         id='job-status-table',
                         columns=columns,
@@ -129,10 +129,12 @@ class Dashboard:
                         sort_action='native',
                         filter_action='native',
                         editable=True,
-                        style_table={'overflowX': 'auto'},
+                        style_table={'width': '100%', 'overflowX': 'auto'},
                         style_cell={
                             'textAlign': 'left',
-                            'border': '1px solid black'
+                            'border': '1px solid black',
+                            'whiteSpace': 'normal',
+                            'height': 'auto'
                         },
                         style_header={
                             'backgroundColor': 'rgb(230, 230, 230)',
