@@ -129,12 +129,10 @@ class Dashboard:
                         sort_action='native',
                         filter_action='native',
                         editable=True,
-                        style_table={'width': '100%', 'overflowX': 'auto'},
+                        style_table={'overflowX': 'auto'},
                         style_cell={
                             'textAlign': 'left',
-                            'border': '1px solid black',
-                            'whiteSpace': 'normal',
-                            'height': 'auto'
+                            'border': '1px solid black'
                         },
                         style_header={
                             'backgroundColor': 'rgb(230, 230, 230)',
