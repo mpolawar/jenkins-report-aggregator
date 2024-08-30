@@ -10,21 +10,30 @@
       "jenkins_url" : "https://jenkins-ng.xebialabs.com/jenkinsng/",
       "job_name" :    "QualityEngineering/job/XLR_Fresh_Install/job/master",
       "db_table":    "XLR_Fresh_Install",
-      "title":       "Release Fresh Install"
+      "title":       "Release Fresh Install",
+      "display_param": ["from_build", "database", "exception_list"]
     },
     {
       "jenkins_url" : "https://jenkins-ng.xebialabs.com/jenkinsng/",
       "job_name" :    "QualityEngineering/job/XLR_Upgrade/job/master/",
       "db_table":    "XLR_Upgrade",
-      "title":       "Release Upgrade"
+      "title":       "Release Upgrade",
+      "display_param": ["from_build", "to_build", "database", "exception_list"]
     },
 
     {
       "jenkins_url" : "https://jenkins-ng.xebialabs.com/jenkinsng/",
       "job_name" :    "QualityEngineering/job/XLD_Fresh_Install/job/master/",
       "db_table":    "XLD_Fresh_Install",
-      "title":       "Deploy Fresh Install"
+      "title":       "Deploy Fresh Install",
+      "display_param": ["from_build", "database", "exception_list"]
+    },
+    {
+      "jenkins_url" : "https://jenkins-ng.xebialabs.com/jenkinsng/",
+      "job_name" :    "QualityEngineering/job/XLD_Upgrade/job/master/",
+      "db_table":    "XLD_Upgrade",
+      "title":       "Deploy Upgrade",
+      "display_param": ["from_build", "to_build", "database", "exception_list"]
     }
   ]
 }
-

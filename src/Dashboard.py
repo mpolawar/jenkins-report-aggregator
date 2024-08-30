@@ -40,6 +40,7 @@ class Dashboard:
             else:
                 for job in self.jobs:
                     if job['title'] == tab:
+                        current_job = job
                         tab = job['db_table']
                         break
                 #print(f'Loading {tab} data')
@@ -50,80 +51,43 @@ class Dashboard:
                 rows = cursor.fetchall()
                 conn.close()
 
+                # Initialize empty lists for each parameter mentioned in display_param
                 run_dates = []
                 build_numbers = []
-                from_builds = []
-                to_builds = []
-                databases = []
-                excluded_plugins_list = []
+                param_lists = {param: [] for param in current_job['display_param']}
                 build_statuses = []
                 comments = []
 
-
+                # Populate the lists with data from the database
                 for row in rows:
                     run_date, build_number, job_status, parameters, comment = row
                     parameters = json.loads(parameters)
-                    from_build = parameters.get('from_build', 'N/A')
-                    if 'to_build' in parameters:
-                        #to_build = parameters['to_build']
-                        to_build = parameters.get('to_build')
-                    database = parameters.get('database', 'N/A')
-                    excluded_plugins = parameters.get('exception_list', 'N/A')
 
                     run_date = run_date.split('T')[0]
                     run_dates.append(run_date)
                     build_numbers.append(build_number)
-                    from_builds.append(from_build)
-                    if 'to_build' in parameters:
-                        to_builds.append(to_build)
-                    databases.append(database)
-                    excluded_plugins_list.append(excluded_plugins)
+                    for param in current_job['display_param']:
+                        param_value = parameters.get(param, 'N/A')
+                        param_lists[param].append(param_value)
                     build_statuses.append(job_status)
                     comments.append(comment)
 
-                #if len(to_builds) > 0:
-                if to_builds:
-                    # Create a DataFrame
-                    df = pd.DataFrame({
-                        'Date': run_dates,
-                        'Build Number': build_numbers,
-                        'From Build': from_builds,
-                        'To Build': to_builds,
-                        'Database': databases,
-                        'Excluded Plugins': excluded_plugins_list,
-                        'Status': build_statuses,
-                        'Comment': comments
-                    })
+                # Create a DataFrame dynamically using the lists
+                data = {
+                    'Date': run_dates,
+                    'Build Number': build_numbers,
+                    'Status': build_statuses,
+                    'Comment': comments
+                }
+                data.update(param_lists)
+                df = pd.DataFrame(data)
 
-                    columns = [
-                        {'name': 'Date', 'id': 'Date'},
-                        {'name': 'Build Number', 'id': 'Build Number'},
-                        {'name': 'From Build', 'id': 'From Build'},
-                        {'name': 'To Build', 'id': 'To Build'},
-                        {'name': 'Database', 'id': 'Database'},
-                        {'name': 'Excluded Plugins', 'id': 'Excluded Plugins'},
-                        {'name': 'Status', 'id': 'Status'},
-                        {'name': 'Comment', 'id': 'Comment', 'editable': True}
-                    ]
-                else:
-                    df = pd.DataFrame({
-                        'Date': run_dates,
-                        'Build Number': build_numbers,
-                        'From Build': from_builds,
-                        'Database': databases,
-                        'Excluded Plugins': excluded_plugins_list,
-                        'Status': build_statuses,
-                        'Comment': comments
-                    })
-                    columns = [
-                        {'name': 'Date', 'id': 'Date'},
-                        {'name': 'Build Number', 'id': 'Build Number'},
-                        {'name': 'From Build', 'id': 'From Build'},
-                        {'name': 'Database', 'id': 'Database'},
-                        {'name': 'Excluded Plugins', 'id': 'Excluded Plugins'},
-                        {'name': 'Status', 'id': 'Status'},
-                        {'name': 'Comment', 'id': 'Comment', 'editable': True}
-                    ]
+                # Define columns for the DataTable
+                columns = [{'name': 'Date', 'id': 'Date'},
+                           {'name': 'Build Number', 'id': 'Build Number'}] + \
+                          [{'name': param.replace('_', ' ').title(), 'id': param} for param in current_job['display_param']] + \
+                          [{'name': 'Status', 'id': 'Status'},
+                           {'name': 'Comment', 'id': 'Comment', 'editable': True}]
 
 
                 return html.Div([
