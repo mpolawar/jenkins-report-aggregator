@@ -82,6 +82,9 @@ class Dashboard:
                 data.update(param_lists)
                 df = pd.DataFrame(data)
 
+                # Sort the DataFrame by 'Build Number' in descending order
+                df = df.sort_values(by='Build Number', ascending=False)
+
                 # Define columns for the DataTable
                 columns = [{'name': 'Date', 'id': 'Date'},
                            {'name': 'Build Number', 'id': 'Build Number'}] + \
