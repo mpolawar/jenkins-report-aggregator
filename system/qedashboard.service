@@ -1,0 +1,13 @@
+cat /etc/systemd/system/qedashboard.service
+[Unit]
+Description=Devopsqe Dashboard  Service
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/run_server.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
+[root@xl-deploy-nightly src]# 
